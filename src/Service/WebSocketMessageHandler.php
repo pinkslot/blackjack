@@ -16,7 +16,10 @@ class WebSocketMessageHandler
     public function subscribe(int $modelId, ConnectionInterface $connection): void
     {
         $this->subscriptionByModel[$modelId] ??= [];
-        $this->subscriptionByModel[$modelId][] = $connection;
+
+        if (!in_array($connection, $this->subscriptionByModel[$modelId], true)) {
+            $this->subscriptionByModel[$modelId][] = $connection;
+        }
     }
 
     public function unsubscribe(ConnectionInterface $connection): void
