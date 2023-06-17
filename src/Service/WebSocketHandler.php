@@ -40,7 +40,6 @@ class WebSocketHandler implements MessageComponentInterface
     function onMessage(ConnectionInterface $conn, $msg)
     {
         $data = json_decode($msg->getPayload(), true);
-        var_dump($data);
         $actionData = $data['data'];
 
         match ($data['action']) {

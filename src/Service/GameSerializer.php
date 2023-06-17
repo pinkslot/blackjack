@@ -28,6 +28,7 @@ class GameSerializer
             'status' => $game->getStatus(),
             'players' => $players,
             'winner' => $this->cardService->getWinner($game),
+            'timestamp' => time(),
         ];
     }
 }
