@@ -10,6 +10,7 @@ use App\Repository\GameRepository;
 use App\Repository\PlayerRepository;
 use App\Service\CardService;
 use App\Service\GameSerializer;
+use App\Service\WebSocketClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,7 @@ class Controller
         private EntityManagerInterface $entityManager,
         private GameSerializer $gameSerializer,
         private CardService $cardService,
+        private WebSocketClient $webSocketClient,
     ) {
     }
 
@@ -48,7 +50,10 @@ class Controller
 
         $this->entityManager->flush();
 
-        return new JsonResponse($this->gameSerializer->serialize($game));
+        $state = $this->gameSerializer->serialize($game);
+        $this->sendWebsocketData($model, $state);
+
+        return new JsonResponse($state);
     }
 
     #[Route('/games/{gameId}/hit', methods: ['POST'])]
@@ -72,7 +77,12 @@ class Controller
 
         $this->entityManager->flush();
 
-        return new JsonResponse($this->gameSerializer->serialize($game));
+        $model = $game->getPlayers()[1];
+
+        $state = $this->gameSerializer->serialize($game);
+        $this->sendWebsocketData($model, $state);
+
+        return new JsonResponse($state);
     }
 
     #[Route('/games/{gameId}/stand', methods: ['POST'])]
@@ -87,13 +97,16 @@ class Controller
             return new Response('Game finished', Response::HTTP_BAD_REQUEST);
         }
 
-        $player = $game->getPlayers()[0];
-
         $this->doStand($game);
 
         $this->entityManager->flush();
 
-        return new JsonResponse($this->gameSerializer->serialize($game));
+        $model = $game->getPlayers()[1];
+
+        $state = $this->gameSerializer->serialize($game);
+        $this->sendWebsocketData($model, $state);
+
+        return new JsonResponse($state);
     }
 
     private function doStand(Game $game): void
@@ -121,5 +134,21 @@ class Controller
         }
 
         return new JsonResponse($this->gameSerializer->serialize($game));
+    }
+
+    /**
+     * @param mixed $model
+     * @param array $state
+     * @return void
+     */
+    public function sendWebsocketData(mixed $model, array $state): void
+    {
+        $this->webSocketClient->sendData([
+            'action' => 'issue',
+            'data' => [
+                'modelId' => $model->getUserId(),
+                'state' => $state,
+            ],
+        ]);
     }
 }
