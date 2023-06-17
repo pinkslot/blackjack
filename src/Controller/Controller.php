@@ -34,7 +34,7 @@ class Controller
 
         $activeGame = $this->gameRepository->getModelActiveGame($requestContent['modelId']);
 
-        if ($activeGame > 0) {
+        if ($activeGame !== null) {
             return new Response('Model already has active game', Response::HTTP_BAD_REQUEST);
         }
 

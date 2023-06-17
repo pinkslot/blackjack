@@ -11,7 +11,28 @@ class CardService
 {
     public function getSum(Player $player): int
     {
-        return array_sum($this->getValues($player->getCards()));
+        $values = $this->getValues($player->getCards());
+        while (array_sum($values) > 21) {
+            // Try to replace Ace value from 11 to 1
+            if (!$this->replaceValues($values, 11, 1)) {
+                break;
+            }
+        }
+
+        return array_sum($values);
+    }
+
+    private function replaceValues(array &$array, $from, $to): bool
+    {
+        foreach ($array as $key => $value) {
+            if ($value === $from) {
+                $array[$key] = $to;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getValues(array $cards): array
@@ -28,7 +49,7 @@ class CardService
         }
 
         // Ace
-        if ($number === 13) {
+        if ($number === 12) {
             return 11;
         }
 
