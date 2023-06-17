@@ -115,7 +115,7 @@ class Controller
     #[Route('/games', methods: ['GET'])]
     public function getGame(Request $request): Response
     {
-        $game = $this->gameRepository->getModelActiveGame($request->get('modelId'));
+        $game = $this->gameRepository->getModelActiveGame((int) $request->get('modelId'));
         if ($game === null) {
             return new JsonResponse(null);
         }
