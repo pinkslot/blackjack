@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Game;
+use App\Entity\Player;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -39,20 +42,25 @@ class GameRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Game[] Returns an array of Game objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('g')
-//            ->andWhere('g.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('g.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function getModelActiveGame(int $modelId): ?Game
+    {
+        return $this->getModelActiveGameQueryBuilder($modelId)
+            ->select('g')
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
+    private function getModelActiveGameQueryBuilder(int $modelId): QueryBuilder
+    {
+        return $this->createQueryBuilder('g')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', Game::STATUS_IN_PROGRESS)
+            ->join('g.players', 'p')
+            ->andWhere('p.userId = :modelId')
+            ->setParameter('modelId', $modelId)
+            ->setMaxResults(1);
+    }
 
 //    public function findOneBySomeField($value): ?Game
 //    {

@@ -11,6 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
 {
+    public const STATUS_IN_PROGRESS = 'in-progress';
+    public const STATUS_FINISHED = 'finished';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -19,6 +22,9 @@ class Game
     #[ORM\OneToMany(targetEntity: Player::class, mappedBy: 'game', fetch: 'LAZY')]
     #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $players;
+
+    #[ORM\Column(type: Types::STRING, options: ['default' => self::STATUS_IN_PROGRESS])]
+    private string $status = self::STATUS_IN_PROGRESS;
 
     private ?array $deckCache = null;
 
@@ -47,6 +53,11 @@ class Game
         return $this->seed;
     }
 
+    public function finish(): void
+    {
+        $this->status = self::STATUS_FINISHED;
+    }
+
     public function getDeck(): array
     {
         if ($this->deckCache === null) {
@@ -61,14 +72,19 @@ class Game
         return $this->deckCache;
     }
 
-    public function getCards(Game $game): array
+    public function getCards(): array
     {
-        $deck = $game->getDeck();
+        $deck = $this->getDeck();
         $result = [];
-        foreach ($game->getPlayers() as $player) {
+        foreach ($this->getPlayers() as $player) {
             $result[$player->getUserId()] = array_splice($deck, 0, $player->getCardCount());
         }
 
         return $result;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 }

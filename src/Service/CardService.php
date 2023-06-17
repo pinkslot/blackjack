@@ -21,10 +21,10 @@ class CardService
 
     private function getValue(int $card): int
     {
-        $number = $card % 13 + 2;
+        $number = $card % 13;
 
-        if ($number <= 10) {
-            return $number;
+        if ($number <= 8) {
+            return $number + 2;
         }
 
         // Ace
@@ -37,8 +37,7 @@ class CardService
 
     public function getWinner(Game $game): ?int
     {
-        $player = $game->getPlayers()[0];
-        if ($player->getStatus() !== Player::STATUS_STOOD) {
+        if ($game->getStatus() !== Game::STATUS_FINISHED) {
             return null;
         }
 

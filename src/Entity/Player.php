@@ -9,9 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: PlayerRepository::class)]
 class Player
 {
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_STOOD = 'stood';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -19,9 +16,6 @@ class Player
 
     #[ORM\Column(type: Types::INTEGER)]
     private int $cardCount = 0;
-
-    #[ORM\Column(type: Types::STRING)]
-    private string $status = self::STATUS_ACTIVE;
 
     private ?array $cardsCache = null;
 
@@ -53,13 +47,7 @@ class Player
     public function incrementCardCount(): static
     {
         $this->cardCount++;
-
-        return $this;
-    }
-
-    public function stand(): static
-    {
-        $this->status = static::STATUS_STOOD;
+        $this->cardsCache = null;
 
         return $this;
     }
@@ -69,13 +57,12 @@ class Player
         return $this->game;
     }
 
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
     public function getCards(): array
     {
-        return [];
+        if ($this->cardsCache === null) {
+            $this->cardsCache = $this->game->getCards()[$this->userId];
+        }
+
+        return $this->cardsCache;
     }
 }

@@ -32,11 +32,17 @@ class Controller
     {
         $requestContent = json_decode($request->getContent(), true);
 
+        $activeGame = $this->gameRepository->getModelActiveGame($requestContent['modelId']);
+
+        if ($activeGame > 0) {
+            return new Response('Model already has active game', Response::HTTP_BAD_REQUEST);
+        }
+
         $game = new Game(rand());
         $this->gameRepository->save($game);
 
-        $user = new Player($game, $requestContent['userId'], 0);
-        $model = new Player($game, $requestContent['modelId'], 1);
+        $user = new Player($game, $requestContent['userId']);
+        $model = new Player($game, $requestContent['modelId']);
         $this->playerRepository->save($user);
         $this->playerRepository->save($model);
 
@@ -53,11 +59,11 @@ class Controller
             return new Response('Game not found', Response::HTTP_NOT_FOUND);
         }
 
-        $player = $game->getPlayers()[0];
-
-        if ($player->getStatus() !== Player::STATUS_ACTIVE) {
+        if ($game->getStatus() === Game::STATUS_FINISHED) {
             return new Response('Game finished', Response::HTTP_BAD_REQUEST);
         }
+
+        $player = $game->getPlayers()[0];
 
         $player->incrementCardCount();
         if ($this->cardService->getSum($player) >= 21) {
@@ -77,11 +83,11 @@ class Controller
             return new Response('Game not found', Response::HTTP_NOT_FOUND);
         }
 
-        $player = $game->getPlayers()[0];
-
-        if ($player->getStatus() !== Player::STATUS_ACTIVE) {
+        if ($game->getStatus() === Game::STATUS_FINISHED) {
             return new Response('Game finished', Response::HTTP_BAD_REQUEST);
         }
+
+        $player = $game->getPlayers()[0];
 
         $this->doStand($game);
 
@@ -93,7 +99,7 @@ class Controller
     private function doStand(Game $game): void
     {
         $player = $game->getPlayers()[0];
-        $player->stand();
+        $game->finish();
         $playerSum = $this->cardService->getSum($player);
 
         if ($playerSum >= 21) {
@@ -104,5 +110,16 @@ class Controller
         while ($this->cardService->getSum($model) <= $playerSum) {
             $model->incrementCardCount();
         }
+    }
+
+    #[Route('/games', methods: ['GET'])]
+    public function getGame(Request $request): Response
+    {
+        $game = $this->gameRepository->getModelActiveGame($request->get('modelId'));
+        if ($game === null) {
+            return new JsonResponse(null);
+        }
+
+        return new JsonResponse($this->gameSerializer->serialize($game));
     }
 }
