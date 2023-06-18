@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\GameRepository;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -28,11 +29,15 @@ class Game
 
     private ?array $deckCache = null;
 
+    #[ORM\Column(type: Types::STRING)]
+    private string $updatedAt;
+
     public function __construct(
         #[ORM\Column(type: Types::BIGINT)]
         private int $seed,
     ) {
         $this->players = new ArrayCollection();
+        $this->updated();
     }
 
     public function getId(): ?int
@@ -56,6 +61,7 @@ class Game
     public function finish(): void
     {
         $this->status = self::STATUS_FINISHED;
+        $this->updated();
     }
 
     public function getDeck(): array
@@ -86,5 +92,15 @@ class Game
     public function getStatus(): string
     {
         return $this->status;
+    }
+
+    public function getUpdatedAt(): string
+    {
+        return $this->updatedAt;
+    }
+
+    public function updated(): void
+    {
+        $this->updatedAt = (new DateTimeImmutable())->format(DATE_W3C);
     }
 }

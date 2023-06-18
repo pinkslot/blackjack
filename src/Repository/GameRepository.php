@@ -47,6 +47,7 @@ class GameRepository extends ServiceEntityRepository
         return $this->getModelActiveGameQueryBuilder($modelId)
             ->select('g')
             ->getQuery()
+            ->setMaxResults(1)
             ->getOneOrNullResult()
         ;
     }
@@ -59,7 +60,7 @@ class GameRepository extends ServiceEntityRepository
             ->join('g.players', 'p')
             ->andWhere('p.userId = :modelId')
             ->setParameter('modelId', $modelId)
-            ->setMaxResults(1);
+        ;
     }
 
 //    public function findOneBySomeField($value): ?Game

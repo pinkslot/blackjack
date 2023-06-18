@@ -74,6 +74,7 @@ class Controller
         if ($this->cardService->getSum($player) >= 21) {
             $this->doStand($game);
         }
+        $game->updated();
 
         $this->entityManager->flush();
 
