@@ -129,7 +129,19 @@ class Controller
     #[Route('/games', methods: ['GET'])]
     public function getGame(Request $request): Response
     {
-        $game = $this->gameRepository->getModelActiveGame((int) $request->get('modelId'));
+        $modelId = (int)$request->get('modelId');
+
+        $expiredModelGames = $this->gameRepository->getExpiredModelGames($modelId);
+
+        if (count($expiredModelGames) > 0) {
+            foreach ($expiredModelGames as $expiredModelGame) {
+                $this->doStand($expiredModelGame);
+            }
+
+            $this->entityManager->flush();
+        }
+
+        $game = $this->gameRepository->getModelActiveGame($modelId);
         if ($game === null) {
             return new JsonResponse(null);
         }

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Game;
 use App\Entity\Player;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -40,6 +41,19 @@ class GameRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function getExpiredModelGames(int $modelId): array
+    {
+        $expiredAt = (new DateTimeImmutable())->modify('-1 minutes');
+
+        return $this->getModelActiveGameQueryBuilder($modelId)
+            ->select('g')
+            ->andWhere('g.updatedAt < :updatedAt')
+            ->setParameter('updatedAt', $expiredAt->format(DATE_W3C))
+            ->getQuery()
+            ->getResult()
+        ;
     }
 
     public function getModelActiveGame(int $modelId): ?Game
