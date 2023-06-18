@@ -26,6 +26,7 @@ class GameSerializer
         return [
             'id' => $game->getId(),
             'status' => $game->getStatus(),
+            'playerId' => $game->getPlayers()[0]->getUserId(),
             'players' => $players,
             'winner' => $this->cardService->getWinner($game),
             'timestamp' => time(),
